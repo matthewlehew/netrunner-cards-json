@@ -106,6 +106,18 @@ describe('Cycles', () => {
   it('card_cycles.json passes schema validation', () => {
     validateAgainstSchema('card_cycles_schema.json', cardCycles);
   });
+
+  it('have unique position values', () => {
+    const positionToCycle = new Map<number, string>();
+    cardCycles.forEach(cycle => {
+      if (positionToCycle.has(cycle.position)) {
+        expect.fail(
+          `Card cycle ${cycle.name} has duplicate position ${cycle.position}, already used by ${positionToCycle.get(cycle.position)}`
+        );
+      }
+      positionToCycle.set(cycle.position, cycle.name);
+    });
+  });
 });
 
 describe('SetTypes', () => {
@@ -163,6 +175,17 @@ describe('Card Sets', () => {
     cardSets.forEach(s => {
       expect(cardCycleIds, `Card set ${s.name} has invalid card_cycle_id ${s.card_cycle_id}`).to.include(s.card_cycle_id);
     });
+  });
+
+  it('are listed in chronological order', () => {
+    for (let i = 1; i < cardSets.length; i++) {
+      const prevDate = new Date(cardSets[i - 1].date_release);
+      const currDate = new Date(cardSets[i].date_release);
+      
+      expect(currDate.getTime(), 
+        `Card sets out of order: ${cardSets[i].name} (${cardSets[i].date_release}) comes after ${cardSets[i - 1].name} (${cardSets[i - 1].date_release}) in the list, but has an earlier date`
+      ).to.be.at.least(prevDate.getTime());
+    }
   });
 });
 
